@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Ticker City</title>
+<meta property="og:title" content="Ticker City">
+<meta property="og:description" content="Self-hosted tools for NinjaTrader 8 data, AI agents, and prop-style risk rules. Simulation and education only.">
+<meta property="og:image" content="https://ticker-city.github.io/assets/city-hero.jpg">
+<meta property="og:url" content="https://ticker-city.github.io/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="Self-hosted tools for NinjaTrader 8 data, AI agents, and prop-style risk rules. Simulation and education only.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: cinematic full-bleed night city with the headline anchored low-left; below, glass panels floating over a deep navy field with soft colour auras. */
+:root {
+  color-scheme: dark;
+  --bg: #0c0a12; --panel: #17131f; --line: #2e2838; --ink: #f7f2ea; --muted: #9a92a8;
+  --up: #3ddc97; --down: #ff6a5c; --warn: #ffb347; --accent: #b79cff; --sun: #ffb347;
+  --deep: #07060c; --soft: #d6cedd;
+  --glass: rgba(255,255,255,.04); --hair: rgba(255,255,255,.09);
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --gap: clamp(88px, 13vw, 176px);
+  --spring: cubic-bezier(.16, 1, .3, 1);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--display); font-weight: 400; font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+h1, h2, h3, p, dl, dd, ul { margin: 0; }
+h1, h2, h3 { text-wrap: balance; font-weight: 700; }
+h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(2.7rem, 6.6vw, 5rem); line-height: .98; letter-spacing: -0.02em; }
+.wrap { max-width: 1160px; margin-inline: auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--soft); }
+.eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 12px var(--sun); }
+.lede { color: var(--soft); max-width: 56ch; font-size: clamp(1.05rem, 1.5vw, 1.2rem); line-height: 1.55; }
+.fine { color: var(--muted); font-size: .84rem; max-width: 72ch; }
+
+/* buttons: feedback on press, instant */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .6em; min-height: 52px; padding: 0 26px; border-radius: 999px; font-family: var(--display); font-size: 1rem; font-weight: 700; letter-spacing: -.005em; text-decoration: none; white-space: nowrap; color: var(--ink); background: var(--glass); border: 1px solid var(--hair); transition: transform .35s var(--spring), background .2s ease, box-shadow .3s ease, border-color .2s ease; }
+.btn:hover { background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.2); transform: translateY(-2px); }
+.btn:active { transform: scale(.97); transition-duration: .1s; }
+.btn-go { background: linear-gradient(180deg, #ffd596 0%, #ffab40 100%); border-color: transparent; color: #2b1500; box-shadow: 0 10px 34px -10px rgba(255,170,64,.8), inset 0 1px 0 rgba(255,255,255,.55); }
+.btn-go:hover { background: linear-gradient(180deg, #ffe0b0 0%, #ffb857 100%); border-color: transparent; box-shadow: 0 16px 44px -10px rgba(255,170,64,.95), inset 0 1px 0 rgba(255,255,255,.6); }
+.btn .arr { transition: transform .35s var(--spring); }
+.btn:hover .arr { transform: translateX(4px); }
+.btn-sm { min-height: 38px; padding: 0 16px; font-size: .86rem; }
+
+/* floating glass nav */
+.nav { position: fixed; z-index: 20; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: clamp(14px, 2.4vw, 30px); padding: 7px 7px 7px 20px; border-radius: 999px; background: rgba(22,16,28,.6); -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%); border: 1px solid var(--hair); box-shadow: 0 14px 44px -18px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.08); max-width: calc(100% - 32px); }
+.mark { font-family: var(--mono); font-weight: 700; letter-spacing: .2em; font-size: .8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.mark i { width: 9px; height: 9px; background: var(--sun); border-radius: 2px; box-shadow: 0 0 14px var(--sun); }
+.nav ul { display: flex; gap: clamp(12px, 2vw, 26px); list-style: none; padding: 0; }
+.nav ul a { font-size: .9rem; font-weight: 500; color: var(--soft); text-decoration: none; padding-block: 10px; transition: color .2s ease; }
+.nav ul a:hover { color: var(--ink); }
+
+/* hero */
+.hero { position: relative; overflow: hidden; min-height: clamp(640px, 94vh, 920px); display: flex; flex-direction: column; justify-content: flex-end;
+  background: radial-gradient(80% 50% at 72% 90%, rgba(255,160,80,.6) 0%, rgba(255,160,80,0) 70%), radial-gradient(70% 55% at 22% 82%, rgba(205,70,120,.4) 0%, rgba(205,70,120,0) 70%), linear-gradient(180deg, var(--deep) 0%, #1a1028 36%, #4a2248 64%, #a3475a 85%, #ff9d5c 100%); }
+#city { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.live.nogl #city { display: none; }
+.plate { position: absolute; inset: -5% 0; will-change: transform; transform: translate3d(0, calc(var(--p, 0) * 7%), 0) scale(calc(1.03 + var(--p, 0) * .09)); }
+.plate video { transition: opacity 1s ease; }
+.plate img, .plate video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%; }
+.live { position: relative; height: clamp(230px, 30vw, 360px); border-radius: 20px; overflow: hidden; border: 1px solid var(--hair); background: linear-gradient(180deg, #140d20 0%, #3d1f42 55%, #a3475a 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+.livetag { position: absolute; left: 14px; top: 12px; font-family: var(--mono); font-size: .66rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; background: rgba(8,6,13,.6); border: 1px solid var(--hair); color: var(--soft); }
+.hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(78% 86% at 0% 100%, rgba(8,6,13,.96) 0%, rgba(8,6,13,.74) 42%, rgba(8,6,13,0) 74%), linear-gradient(0deg, var(--bg) 0%, rgba(12,10,18,0) 26%), linear-gradient(180deg, rgba(8,6,13,.7) 0%, rgba(8,6,13,0) 22%); }
+.hero-copy { position: relative; z-index: 2; display: grid; gap: 28px; justify-items: start; padding-block: 140px clamp(96px, 13vh, 150px); }
+.hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(3.6rem, 12vw, 8.8rem); line-height: .9; letter-spacing: -0.025em; }
+.hero h1 span { display: block; }
+.hero h1 .g { font-style: italic; padding-right: .08em; background: linear-gradient(100deg, #ffe2b0 0%, #ffb347 45%, #ff7a59 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .lede { max-width: 38ch; color: #d6dff0; text-shadow: 0 1px 14px var(--deep); }
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+
+/* tape */
+.tape { border-block: 1px solid var(--hair); background: rgba(255,255,255,.025); overflow: hidden; font-family: var(--mono); font-size: .74rem; font-weight: 700; letter-spacing: .1em; white-space: nowrap; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.tape-run { display: inline-flex; padding-block: 14px; animation: tape 42s linear infinite; }
+.tape-run span { padding-inline: 24px; color: var(--muted); }
+.tape-run b { font-weight: 700; margin-left: .7em; }
+.u { color: var(--up); } .d { color: var(--down); } .w { color: var(--warn); }
+@keyframes tape { to { transform: translateX(-50%); } }
+
+/* sections */
+section { position: relative; padding-block: var(--gap) 0; }
+.aura::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 900px; pointer-events: none; z-index: -1; }
+#products.aura::before { background: radial-gradient(50% 50% at 86% 30%, rgba(183,156,255,.14), transparent 70%); }
+#game.aura::before { background: radial-gradient(46% 50% at 12% 50%, rgba(255,160,80,.10), transparent 70%); }
+main { position: relative; z-index: 0; }
+
+.problem .wrap { display: grid; gap: clamp(36px, 6vw, 72px); }
+.problem h2 { font-size: clamp(3.2rem, 10.5vw, 7.6rem); letter-spacing: -0.025em; line-height: .92; }
+.problem h2 em { font-style: italic; color: var(--sun); }
+.problem .cols { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(28px, 6vw, 88px); align-items: start; }
+.rules { list-style: none; padding: 0; display: grid; gap: 10px; }
+.rules li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; border-radius: 16px; background: var(--glass); border: 1px solid var(--hair); font-weight: 500; }
+.rules li span:last-child { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--warn); text-align: right; }
+.claim { font-size: clamp(1.3rem, 2.6vw, 1.8rem); font-weight: 700; line-height: 1.25; letter-spacing: -.02em; margin-top: 28px; }
+
+.head { display: grid; gap: 18px; justify-items: start; margin-bottom: clamp(36px, 5vw, 64px); }
+
+/* product cards: glass, light catching the top edge, spotlight follows the pointer */
+.bento { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.card { position: relative; overflow: hidden; min-width: 0; display: flex; flex-direction: column; gap: 22px; padding: clamp(26px, 3.4vw, 44px); border-radius: 28px; background: linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.018) 100%); border: 1px solid var(--hair); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 30px 60px -40px rgba(0,0,0,.9); transition: transform .5s var(--spring), border-color .3s ease; }
+.card::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s ease; background: radial-gradient(460px circle at var(--mx, 50%) var(--my, 0%), var(--spot, rgba(90,162,255,.16)), transparent 62%); }
+.card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,.18); }
+.card:hover::before { opacity: 1; }
+.card > * { position: relative; }
+.price { font-family: var(--mono); font-weight: 700; font-size: clamp(3.2rem, 7vw, 5rem); line-height: .9; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
+.terms { font-family: var(--mono); font-size: .7rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 14px; }
+.card h3 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); letter-spacing: -.03em; line-height: 1.08; }
+.card code { display: block; margin-top: 8px; font-family: var(--mono); font-size: .78rem; color: var(--muted); overflow-wrap: anywhere; }
+.card p { color: var(--soft); max-width: 46ch; }
+.tags { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.tags li { font-size: .82rem; font-weight: 500; padding: 6px 13px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid var(--hair); color: var(--soft); }
+.buy { margin-top: auto; padding-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.buy .note { font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+.card.free { --spot: rgba(183,156,255,.18); } .card.free .price { color: var(--accent); }
+.card.kit { --spot: rgba(54,211,154,.16); } .card.kit .price { color: var(--up); }
+.card.city { --spot: rgba(255,195,77,.14); grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(24px, 5vw, 64px); align-items: end; background: radial-gradient(70% 120% at 100% 100%, rgba(255,195,77,.12), transparent 60%), linear-gradient(180deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.02) 100%); }
+.card.city .price { color: var(--warn); }
+.card.city .col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.tags li.inc { border-color: rgba(54,211,154,.5); color: var(--up); background: rgba(54,211,154,.08); }
+.skyline { display: flex; align-items: flex-end; gap: 6px; height: clamp(90px, 14vw, 150px); margin-bottom: 4px; }
+.skyline i { flex: 1; min-width: 0; height: var(--h); border-radius: 4px 4px 0 0; background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.03)); border-top: 3px solid var(--c, var(--up)); box-shadow: 0 -10px 24px -8px var(--c, var(--up)); }
+.after { margin-top: 28px; }
+
+.game .wrap { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(32px, 6vw, 88px); align-items: center; }
+.game .body { display: grid; gap: 26px; justify-items: start; }
+.stage { perspective: 1200px; }
+.board { border-radius: 28px; padding: 10px 26px; background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); border: 1px solid var(--hair); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 50px 90px -40px rgba(0,0,0,.95), 0 0 90px -30px rgba(255,170,64,.32); transform: rotateY(-9deg) rotateX(4deg); transform-origin: 60% 50%; }
+.board div { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-block: 16px; border-bottom: 1px solid var(--hair); }
+.board div:last-child { border-bottom: 0; }
+.board span { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; color: var(--muted); }
+.board b { font-weight: 700; text-align: right; }
+
+.faq dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.faq dl > div { padding: 24px 26px; border-radius: 20px; background: var(--glass); border: 1px solid var(--hair); }
+.faq dt { font-weight: 700; font-size: 1.12rem; letter-spacing: -.015em; margin-bottom: 6px; }
+.faq dd { color: var(--soft); }
+
+footer { margin-top: var(--gap); border-top: 1px solid var(--hair); background: var(--deep); }
+footer .wrap { padding-block: 48px 60px; display: grid; gap: 24px; }
+footer .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px 28px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 8px 26px; }
+footer nav a { font-size: .9rem; color: var(--soft); text-decoration: none; padding-block: 8px; }
+footer nav a:hover { color: var(--ink); }
+
+/* scroll reveal: resting state stays readable, then settles */
+.js .rv { opacity: .35; transform: translateY(26px) scale(.985); transition: opacity .9s var(--spring), transform .9s var(--spring); transition-delay: var(--d, 0s); }
+.js .rv.in { opacity: 1; transform: none; }
+.js .card.rv.in:hover { transform: translateY(-4px); transition-delay: 0s; }
+
+@media (max-width: 860px) {
+  .nav { position: absolute; left: 0; transform: none; top: calc(env(safe-area-inset-top, 0px) + 18px); margin-left: max(20px, env(safe-area-inset-left, 0px)); padding: 9px 16px; }
+  .nav ul, .nav .btn { display: none; }
+  .problem .cols, .game .wrap, .faq dl, .bento, .card.city { grid-template-columns: minmax(0, 1fr); }
+  .hero { justify-content: flex-start; min-height: clamp(700px, 96vh, 880px); }
+  .hero::after { background: linear-gradient(180deg, rgba(8,6,13,.84) 0%, rgba(8,6,13,.6) 42%, rgba(8,6,13,.05) 72%, var(--bg) 100%); }
+  .hero-copy { padding-block: 120px 0; gap: 24px; }
+  .board { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .tape-run { animation: none; }
+  .btn, .card, .btn .arr { transition: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .nav { background: var(--panel); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+  <a class="mark" href="#hero"><i></i>TICKER CITY</a>
+  <ul>
+    <li><a href="#problem">Why</a></li>
+    <li><a href="#products">Products</a></li>
+    <li><a href="#game">Game</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a class="btn btn-go btn-sm" href="https://github.com/ticker-city">Get it free</a>
+</nav>
+
+<header class="hero" id="hero">
+  <div class="plate" aria-hidden="true">
+    <img src="assets/city-hero.jpg" alt="">
+    <video id="plateVid" muted playsinline preload="metadata" poster="assets/city-hero.jpg"><source src="assets/city-hero.mp4" type="video/mp4"></video>
+  </div>
+  <div class="wrap hero-copy">
+    <p class="eyebrow">Simulation and education only</p>
+    <h1><span>Build a city.</span><span class="g">Guard the rules.</span></h1>
+    <p class="lede">Self-hosted tools for NinjaTrader 8 data, AI agents, and prop-style risk rules.</p>
+    <div class="cta">
+      <a class="btn btn-go" href="https://github.com/ticker-city">Get the free skill <span class="arr" aria-hidden="true">&rarr;</span></a>
+      <a class="btn" href="#products">See the kits</a>
+    </div>
+  </div>
+</header>
+
+<div class="tape" aria-hidden="true">
+  <div class="tape-run" id="tape">
+    <span>DAILY LOSS LIMIT<b class="u">&#9650; IN VIEW</b></span>
+    <span>TRAILING DRAWDOWN<b class="u">&#9650; IN VIEW</b></span>
+    <span>NEWS WINDOW<b class="w">&#9632; LOCKED</b></span>
+    <span>KILL SWITCH<b class="d">&#9660; ARMED</b></span>
+    <span>SELF-HOSTED<b class="u">&#9650; YOUR MACHINE</b></span>
+    <span>MONTHLY FEE<b class="u">&#9650; NONE</b></span>
+    <span>MODE<b class="w">&#9632; SIM ONLY</b></span>
+  </div>
+</div>
+
+<main>
+<section class="problem" id="problem">
+  <div class="wrap">
+    <h2 class="rv">Rules break <em>quietly.</em></h2>
+    <div class="cols">
+      <div class="rv">
+        <p class="lede">Daily loss limits, trailing drawdowns, news windows. They are easy to read and easy to forget. Meanwhile tools that move your data often come with a monthly bill and a server you do not control.</p>
+        <p class="claim">Ticker City keeps it on your machine, one price, rules in view.</p>
+      </div>
+      <ul class="rules rv" style="--d:.08s">
+        <li><span>Daily loss limit</span><span>Easy to forget</span></li>
+        <li><span>Trailing drawdown</span><span>Easy to forget</span></li>
+        <li><span>News windows</span><span>Easy to forget</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="aura" id="products">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="eyebrow">Three products</p>
+      <h2>Start free. Pay once.</h2>
+    </div>
+
+    <div class="bento">
+      <article class="card free rv">
+        <div><div class="price">Free</div><p class="terms">Claude Code skill</p></div>
+        <div><h3>Video Watcher</h3><code>claude-video-watcher</code></div>
+        <p>Let Claude watch the video: labelled frames plus transcript.</p>
+        <ul class="tags"><li>Labelled frames</li><li>Transcript</li></ul>
+        <div class="buy">
+          <a class="btn" href="https://github.com/ticker-city/claude-video-watcher" data-product="claude-video-watcher">Get it on GitHub <span class="arr" aria-hidden="true">&rarr;</span></a>
+        </div>
+      </article>
+
+      <article class="card kit rv" style="--d:.08s">
+        <div><div class="price">$99</div><p class="terms">One-time. No monthly fee.</p></div>
+        <div><h3>Bridge Kit + Prop Risk Guard</h3><code>ninjatrader-bridge-kit</code></div>
+        <p>Self-hosted data bridge for NinjaTrader 8, with prop-style rules kept in view.</p>
+        <ul class="tags"><li>Bar feed</li><li>Event schema</li><li>Python receiver</li><li>Daily loss limit</li><li>Drawdown-floor distance</li><li>Kill switch</li></ul>
+        <div class="buy">
+          <!-- POLAR CHECKOUT: replace href="#" with the Polar checkout link for ninjatrader-bridge-kit ($99) -->
+          <a class="btn btn-go" href="#" data-product="ninjatrader-bridge-kit" data-price="99">Buy the kit</a>
+          <span class="note" role="status"></span>
+        </div>
+      </article>
+
+      <article class="card city rv">
+        <div class="col">
+          <div><div class="price">$249</div><p class="terms">One-time. Includes the $99 kit.</p></div>
+          <div><h3>Trading City dashboard</h3><code>trading-city-dashboard</code></div>
+          <p>A visual city where AI agents are workers.</p>
+        </div>
+        <div class="col">
+          <div class="live" id="live"><canvas id="city" aria-hidden="true"></canvas><span class="livetag">Live 3D preview</span></div>
+          <ul class="tags"><li>Vault</li><li>Accounts</li><li>Approvals desk</li><li>Health audit</li><li class="inc">+ Bridge Kit and Risk Guard</li></ul>
+          <div class="buy">
+            <!-- POLAR CHECKOUT: replace href="#" with the Polar checkout link for trading-city-dashboard ($249) -->
+            <a class="btn btn-go" href="#" data-product="trading-city-dashboard" data-price="249">Buy the dashboard</a>
+            <span class="note" role="status"></span>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <p class="fine after">Ticker City is simulation and education only. Nothing here is financial advice, and no results are promised or implied. Not affiliated with NinjaTrader.</p>
+  </div>
+</section>
+
+<section class="game aura" id="game">
+  <div class="wrap">
+    <div class="body rv">
+      <p class="eyebrow">Free in your browser</p>
+      <h2>Pass the Prop Eval.</h2>
+      <p class="lede">Hit the profit target in 10 simulated days without breaking the daily loss limit, the trailing drawdown, or the news lockout. Grab the Risk Guard power-up: it flattens you before a rule breaks.</p>
+      <a class="btn btn-go" href="game/">Play now <span class="arr" aria-hidden="true">&rarr;</span></a>
+      <p class="fine">Simulated. Not a prediction of anything real.</p>
+    </div>
+    <div class="stage rv" style="--d:.08s">
+      <div class="board" aria-label="The rules of the game">
+        <div><span>RUN</span><b>10 simulated days</b></div>
+        <div><span>GOAL</span><b class="u">Hit the profit target</b></div>
+        <div><span>RULE</span><b class="d">Daily loss limit</b></div>
+        <div><span>RULE</span><b class="d">Trailing drawdown</b></div>
+        <div><span>RULE</span><b class="w">News lockout</b></div>
+        <div><span>POWER-UP</span><b>Risk Guard</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="eyebrow">FAQ</p>
+      <h2>Straight answers.</h2>
+    </div>
+    <dl class="rv">
+      <div><dt>Is this financial advice?</dt><dd>No. Simulation and education only.</dd></div>
+      <div><dt>Do I pay monthly?</dt><dd>No. One-time prices; self-hosted.</dd></div>
+      <div><dt>Is it tied to NinjaTrader?</dt><dd>No. Not affiliated with NinjaTrader.</dd></div>
+      <div><dt>Will it make me money?</dt><dd>We make no such claim. Ever.</dd></div>
+      <div><dt>What do I need?</dt><dd>NinjaTrader 8, Python, and a Windows machine for the bridge.</dd></div>
+      <div><dt>Where do I start?</dt><dd>The free skill or the free game.</dd></div>
+    </dl>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <a class="mark" href="#hero"><i></i>TICKER CITY</a>
+      <nav aria-label="Footer">
+        <a href="#products">Products</a>
+        <a href="game/">Game</a>
+        <a href="https://github.com/ticker-city">Contact on GitHub</a>
+      </nav>
+    </div>
+    <p class="fine">Ticker City is simulation and education only. Nothing here is financial advice, and no results are promised or implied. Not affiliated with NinjaTrader.</p>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* tape: duplicate the run so the loop is seamless */
+  var tape = document.getElementById('tape');
+  tape.innerHTML += tape.innerHTML;
+
+  /* scroll reveal */
+  if (!reduce && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('js');
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    document.querySelectorAll('.rv').forEach(function (el) { io.observe(el); });
+  }
+
+  /* card spotlight follows the pointer */
+  if (window.matchMedia('(hover: hover)').matches) {
+    document.querySelectorAll('.card').forEach(function (c) {
+      c.addEventListener('pointermove', function (e) {
+        var r = c.getBoundingClientRect();
+        c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
+  }
+
+  /* buy buttons are placeholders until Polar checkout is live */
+  document.querySelectorAll('a[data-product][href="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var n = a.parentNode.querySelector('.note');
+      if (n) n.textContent = 'Checkout opens soon.';
+    });
+  });
+
+  /* ---------- 3D city ---------- */
+  var top = document.getElementById('hero'), vid = document.getElementById('plateVid');
+  if (!reduce && vid) {
+    /* the clip starts on the poster frame, so dissolving back to the poster makes the loop seamless */
+    var go = function () { var pl = vid.play(); if (pl && pl.catch) pl.catch(function () {}); };
+    vid.addEventListener('timeupdate', function () { if (vid.duration && vid.currentTime > vid.duration - 1.1) vid.style.opacity = 0; });
+    vid.addEventListener('ended', function () { vid.currentTime = 0; go(); setTimeout(function () { vid.style.opacity = 1; }, 120); });
+    vid.addEventListener('error', function () { vid.style.display = 'none'; }, true);
+    go();
+  } else if (vid) { vid.style.display = 'none'; }
+  if (!reduce) window.addEventListener('scroll', function () { top.style.setProperty('--p', Math.min(1, window.scrollY / Math.max(1, top.clientHeight)).toFixed(3)); }, { passive: true });
+  var hero = document.getElementById('live'), cv = document.getElementById('city');
+  if (!window.THREE) { hero.classList.add('nogl'); return; }
+  var renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'low-power' }); }
+  catch (err) { hero.classList.add('nogl'); return; }
+
+  var UP = 0x3ddc97, DOWN = 0xff6a5c, SUN = 0xffb347, HAZE = 0x7a3550;
+  var small = window.innerWidth < 860;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2));
+  renderer.setClearColor(0x000000, 0);
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(HAZE, 22, 74);
+  var cam = new THREE.PerspectiveCamera(38, 1, 0.1, 220);
+
+  /* moonlight from the left, brand-green glow from the core */
+  scene.add(new THREE.HemisphereLight(0xa487d8, 0x0a0610, 0.8));
+  var moon = new THREE.DirectionalLight(0xff9a55, 1.35); moon.position.set(-26, 9, -16); scene.add(moon);
+  var core = new THREE.PointLight(SUN, 1.6, 36); core.position.set(0, 5, 0); scene.add(core);
+
+  var aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  function winTex() {
+    var c = document.createElement('canvas'); c.width = 128; c.height = 256;
+    var g = c.getContext('2d');
+    g.fillStyle = '#000'; g.fillRect(0, 0, 128, 256);
+    for (var r = 0; r < 16; r++) {
+      var floor = 0.12 + Math.random() * 0.5;                 /* some floors busier than others */
+      for (var k = 0; k < 8; k++) {
+        var lit = Math.random() < floor, v = Math.random();
+        g.globalAlpha = lit ? 0.45 + Math.random() * 0.55 : 1;
+        g.fillStyle = !lit ? '#060b16' : v < 0.7 ? '#ffb964' : v < 0.9 ? '#ffe3b8' : '#b9a4ff';
+        g.fillRect(k * 16 + 3, r * 16 + 4, 10, 8);
+      }
+    }
+    var t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = aniso;
+    return t;
+  }
+  var sides = [];
+  for (var i = 0; i < 4; i++) sides.push(new THREE.MeshLambertMaterial({ color: 0x30263c, emissive: 0xffffff, emissiveMap: winTex() }));
+  var roof = new THREE.MeshLambertMaterial({ color: 0x241b30 });
+
+  /* soft additive halo used for every glowing thing */
+  var gc = document.createElement('canvas'); gc.width = gc.height = 64;
+  var gg = gc.getContext('2d'), grad = gg.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.35, 'rgba(255,255,255,.35)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  gg.fillStyle = grad; gg.fillRect(0, 0, 64, 64);
+  var haloTex = new THREE.CanvasTexture(gc);
+
+  var caps = [], N = small ? 7 : 10, S = 2.6;
+  function tower(x, z, w, d, h, cap) {
+    var geo = new THREE.BoxGeometry(w, h, d), uv = geo.attributes.uv;
+    for (var n = 0; n < uv.count; n++) {
+      var face = Math.floor(n / 4);
+      if (face === 2 || face === 3) continue;
+      var span = face < 2 ? d : w;
+      uv.setXY(n, uv.getX(n) * Math.max(1, Math.round(span)) / 2, uv.getY(n) * Math.max(1, Math.round(h)) / 4);
+    }
+    var m = sides[(Math.random() * 4) | 0];
+    var mesh = new THREE.Mesh(geo, [m, m, roof, roof, m, m]);
+    mesh.position.set(x, h / 2, z);
+    scene.add(mesh);
+    if (cap) {
+      var col = Math.random() < 0.68 ? UP : DOWN;
+      var band = new THREE.MeshBasicMaterial({ color: col });
+      var b = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.1, d + 0.08), band);
+      b.position.set(x, h - 0.22, z); scene.add(b);
+      var hm = new THREE.SpriteMaterial({ map: haloTex, color: col, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
+      var halo = new THREE.Sprite(hm);
+      halo.scale.set(w * 3.4, w * 3.4, 1); halo.position.set(x, h + 0.1, z); scene.add(halo);
+      caps.push([band, hm]);
+    }
+  }
+  for (var a = -N; a <= N; a++) for (var b2 = -N; b2 <= N; b2++) {
+    if ((a + 100) % 4 === 2 || (b2 + 100) % 4 === 2) continue;      /* streets */
+    if (a === 0 && b2 === 0) continue;
+    var dist = Math.sqrt(a * a + b2 * b2), rr = Math.random();
+    var h = 1 + rr * rr * 7 + Math.max(0, 8 - dist * 1.25);
+    tower(a * S, b2 * S, 1.4 + Math.random() * 0.7, 1.4 + Math.random() * 0.7, h, Math.random() < 0.3);
+  }
+  tower(0, 0, 2.1, 2.1, 16, true);
+  var spire = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3.2, 0.12), new THREE.MeshBasicMaterial({ color: SUN }));
+  spire.position.set(0, 17.6, 0); scene.add(spire);
+  var beacon = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, color: SUN, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  beacon.scale.set(5, 5, 1); beacon.position.set(0, 19.2, 0); scene.add(beacon);
+
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshLambertMaterial({ color: 0x0f0a15 }));
+  ground.rotation.x = -Math.PI / 2; scene.add(ground);
+  var grid = new THREE.GridHelper(S * 48, 48, 0x3d2d47, 0x261b30); grid.position.y = 0.02; scene.add(grid);
+
+  /* workers: points of light moving along the streets */
+  var streets = [], L = N * S + 4;
+  for (var s = -N; s <= N; s++) if ((s + 100) % 4 === 2) streets.push(s * S);
+  var CARS = small ? 50 : 110, cars = [], cpos = new Float32Array(CARS * 3), ccol = new Float32Array(CARS * 3);
+  for (var c2 = 0; c2 < CARS; c2++) {
+    var warm = Math.random() < 0.6;
+    cars.push({ axis: Math.random() < 0.5, line: streets[(Math.random() * streets.length) | 0] + (Math.random() < 0.5 ? -0.28 : 0.28), off: Math.random() * 2 * L, sp: (1.2 + Math.random() * 2.4) * (Math.random() < 0.5 ? -1 : 1) });
+    ccol[c2 * 3] = warm ? 1 : 0.5; ccol[c2 * 3 + 1] = warm ? 0.78 : 0.72; ccol[c2 * 3 + 2] = warm ? 0.42 : 1;
+    cpos[c2 * 3 + 1] = 0.14;
+  }
+  var cgeo = new THREE.BufferGeometry();
+  cgeo.setAttribute('position', new THREE.BufferAttribute(cpos, 3));
+  cgeo.setAttribute('color', new THREE.BufferAttribute(ccol, 3));
+  scene.add(new THREE.Points(cgeo, new THREE.PointsMaterial({ size: 0.7, map: haloTex, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })));
+  function moveCars(t) {
+    for (var n = 0; n < CARS; n++) {
+      var c = cars[n], p = (((c.off + t * c.sp) % (2 * L)) + 2 * L) % (2 * L) - L;
+      cpos[n * 3] = c.axis ? p : c.line; cpos[n * 3 + 2] = c.axis ? c.line : p;
+    }
+    cgeo.attributes.position.needsUpdate = true;
+  }
+
+  /* ticker tape ring around the central tower */
+  var tc = document.createElement('canvas'); tc.width = 2048; tc.height = 128;
+  var tapeTex = new THREE.CanvasTexture(tc);
+  tapeTex.wrapS = THREE.RepeatWrapping; tapeTex.anisotropy = aniso;
+  function drawTape() {
+    var g = tc.getContext('2d'), items = [
+      ['DAILY LOSS LIMIT', '▲ IN VIEW', '#36d39a'], ['TRAILING DRAWDOWN', '▲ IN VIEW', '#36d39a'],
+      ['NEWS WINDOW', '■ LOCKED', '#ffc34d'], ['KILL SWITCH', '▼ ARMED', '#ff6b5e'], ['SIM ONLY', '', '#ffc34d']
+    ];
+    g.fillStyle = '#18111f'; g.fillRect(0, 0, 2048, 128);
+    g.fillStyle = '#36d39a'; g.fillRect(0, 0, 2048, 5); g.fillRect(0, 123, 2048, 5);
+    g.font = '700 46px "JetBrains Mono", Consolas, monospace'; g.textBaseline = 'middle';
+    var total = 0, ws = items.map(function (it) { var w = g.measureText(it[0] + ' ' + it[1]).width; total += w; return w; });
+    var gap = Math.max(20, (2048 - total) / items.length), x = gap / 2;
+    items.forEach(function (it, n) {
+      g.fillStyle = '#eaf0fb'; g.fillText(it[0], x, 66);
+      g.fillStyle = it[2]; g.fillText(it[1], x + g.measureText(it[0] + ' ').width, 66);
+      x += ws[n] + gap;
+    });
+    tapeTex.needsUpdate = true;
+  }
+  drawTape();
+  var ring = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 1.34, 64, 1, true), new THREE.MeshBasicMaterial({ map: tapeTex, fog: false }));
+  ring.position.y = 11; scene.add(ring);
+  var ringBack = new THREE.Mesh(ring.geometry, new THREE.MeshBasicMaterial({ color: 0x18111f, side: THREE.BackSide, fog: false }));
+  ringBack.position.y = 11; scene.add(ringBack);
+
+  var w = 0, hgt = 0, prog = 0, progS = 0, mx = 0, mxS = 0;
+  function size() {
+    w = hero.clientWidth; hgt = hero.clientHeight;
+    small = w < 860;
+    renderer.setSize(w, hgt, false);
+    cam.aspect = w / hgt;
+    cam.clearViewOffset();
+    cam.updateProjectionMatrix();
+  }
+  function frame(t) {
+    progS += (prog - progS) * 0.07; mxS += (mx - mxS) * 0.05;            /* ease toward input, never jump */
+    var ang = 0.6 + t * 0.03 + mxS * 0.35, R = 40 - progS * 12, H = 17 - progS * 8;
+    cam.position.set(Math.sin(ang) * R, H, Math.cos(ang) * R);
+    cam.lookAt(0, 7 - progS * 2, 0);
+    tapeTex.offset.x = t * 0.03;
+    beacon.material.opacity = 0.65 + Math.sin(t * 2.2) * 0.25;
+    moveCars(t);
+    renderer.render(scene, cam);
+  }
+  size();
+
+  var visible = true, raf = 0, t0 = performance.now(), lastFlip = 0;
+  function loop(now) {
+    raf = 0;
+    if (!visible || document.hidden) return;
+    var t = (now - t0) / 1000;
+    if (t - lastFlip > 0.8 && caps.length) {
+      lastFlip = t;
+      var pick = caps[(Math.random() * caps.length) | 0], col = Math.random() < 0.68 ? UP : DOWN;
+      pick[0].color.setHex(col); pick[1].color.setHex(col);
+    }
+    frame(t);
+    raf = requestAnimationFrame(loop);
+  }
+  function still() { progS = prog; frame(8); }
+  function kick() { if (reduce) still(); else if (!raf) raf = requestAnimationFrame(loop); }
+
+  window.addEventListener('resize', function () { size(); if (reduce) still(); });
+  if (!reduce) {
+    window.addEventListener('scroll', function () {
+      var r = hero.getBoundingClientRect(); prog = Math.min(1, Math.max(0, (window.innerHeight - r.top) / (window.innerHeight + r.height)));
+    }, { passive: true });
+    hero.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse') mx = e.clientX / Math.max(1, w) - 0.5; });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { visible = es[0].isIntersecting; kick(); }).observe(hero);
+    }
+    document.addEventListener('visibilitychange', kick);
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { drawTape(); if (reduce) still(); });
+  kick();
+})();
+</script>
+</body>
+</html>

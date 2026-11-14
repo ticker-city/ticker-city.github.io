@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Pass the Prop Eval: a free simulation game by Ticker City. Education only.">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Pass the Prop Eval</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one-screen game. City on top, price tape under it, three big buttons at the thumb. Single dark look by choice: a city at dusk in gold light. Art rendered in Blender, finished in Higgsfield. */
+:root {
+  color-scheme: dark;
+  --bg: #0c0a12; --panel: #17131f; --line: #2e2838; --ink: #f7f2ea; --muted: #a39bb0;
+  --up: #3ddc97; --down: #ff6a5c; --warn: #ffb347; --accent: #ffb347;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--display); font-size: 15px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 10px;
+  box-sizing: border-box; overflow: hidden;
+}
+.game { height: 100%; max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.top b { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; line-height: 1; letter-spacing: -.01em; }
+.sim { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: right; }
+.hud { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.cell { background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 6px 8px; min-width: 0; }
+.cell span { display: block; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell strong { font-family: var(--mono); font-size: .95rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.meter { height: 4px; background: var(--line); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.meter i { display: block; height: 100%; width: 100%; background: var(--up); }
+.stage { position: relative; flex: 1 1 0; min-height: 130px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: linear-gradient(180deg, #140d20 0%, #3d1f42 60%, #a3475a 100%); }
+.stage::before { content: ""; position: absolute; inset: -14px; background: url(assets/title.jpg) center 28% / cover; filter: blur(5px) brightness(.62) saturate(1.1); }
+.stage canvas { position: relative; display: block; width: 100%; height: 100%; }
+.banner { position: absolute; left: 8px; right: 8px; top: 8px; text-align: center; font-weight: 700; font-size: .85rem;
+  padding: 6px 8px; border-radius: 6px; background: var(--warn); color: #201400; }
+.toast { position: absolute; left: 8px; right: 8px; bottom: 8px; text-align: center; font-size: .82rem; padding: 6px 8px;
+  border-radius: 6px; background: rgba(20, 15, 26, .9); border: 1px solid var(--line); color: var(--ink); }
+.pos { position: absolute; left: 8px; top: 8px; font-family: var(--mono); font-size: .78rem; font-weight: 700; padding: 3px 7px; border-radius: 5px; background: rgba(20,15,26,.82); border: 1px solid rgba(255,255,255,.12); }
+#chart { display: block; width: 100%; height: 120px; flex: none; background: var(--panel); border: 1px solid rgba(255,255,255,.09); border-radius: 16px; }
+.controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+button { font: inherit; font-weight: 700; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 13px 8px; cursor: pointer; touch-action: manipulation; transition: transform .1s ease-out; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:active { transform: scale(.97); }
+#buy { background: #0f3a2c; border-color: var(--up); }
+#sell { background: #43201d; border-color: var(--down); }
+#guard { grid-column: 1 / -1; padding: 9px 8px; font-size: .88rem; }
+#guard[aria-pressed="true"] { background: #3a2a12; border-color: var(--accent); }
+.overlay { position: fixed; inset: 0; background: linear-gradient(180deg, rgba(8,6,13,.5), rgba(8,6,13,.88)), var(--art, none) center / cover, var(--bg); display: grid; place-items: center; z-index: 20;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); overflow: auto; }
+#ov-start { --art: url(assets/title.jpg); } #ov-end.win { --art: url(assets/win.jpg); } #ov-end.lose { --art: url(assets/lose.jpg); }
+.card { max-width: 440px; width: 100%; background: rgba(20,15,26,.74); -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%); border: 1px solid rgba(255,255,255,.12); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 30px 70px -30px #000; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.card h1 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 2.3rem; line-height: 1; letter-spacing: -.01em; text-wrap: balance; }
+.card p, .card li { color: var(--muted); margin: 0; line-height: 1.45; font-size: .93rem; }
+.card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.card li b, .card p b { color: var(--ink); }
+.card .big { font-family: var(--mono); font-size: 1.25rem; color: var(--ink); font-weight: 700; }
+.card .primary { background: linear-gradient(180deg, #ffd596, #ffab40); color: #2b1500; border-color: transparent; box-shadow: 0 10px 30px -12px rgba(255,170,64,.8), inset 0 1px 0 rgba(255,255,255,.5); }
+.card a { color: var(--accent); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row button { flex: 1 1 140px; }
+.fine { font-size: .74rem !important; }
+.up { color: var(--up); } .down { color: var(--down); } .warnc { color: var(--warn); }
+@media (max-height: 560px) { #chart { height: 84px; } .cell strong { font-size: .85rem; } }
+</style>
+
+</head>
+<body>
+<div class="game">
+  <div class="top"><b>Pass the Prop Eval</b><span class="sim">Simulation · made-up prices · education only</span></div>
+  <div class="hud">
+    <div class="cell"><span id="l-day">Day</span><strong id="h-day">1/10</strong><div class="meter"><i id="m-time"></i></div></div>
+    <div class="cell"><span>To target</span><strong id="h-target">$3,000</strong><div class="meter"><i id="m-target" style="width:0"></i></div></div>
+    <div class="cell"><span>Daily loss room</span><strong id="h-daily">$1,000</strong><div class="meter"><i id="m-daily"></i></div></div>
+    <div class="cell"><span>Drawdown room</span><strong id="h-floor">$2,000</strong><div class="meter"><i id="m-floor"></i></div></div>
+  </div>
+  <div class="stage" id="stage">
+    <canvas id="city" aria-label="City view. Red flood rises as drawdown room shrinks."></canvas>
+    <div class="pos" id="pos">FLAT</div>
+    <div class="banner" id="banner" hidden></div>
+    <div class="toast" id="toast" hidden></div>
+  </div>
+  <canvas id="chart" aria-label="Price chart for the current day"></canvas>
+  <div class="controls">
+    <button id="buy" type="button">Buy</button>
+    <button id="flat" type="button">Flat</button>
+    <button id="sell" type="button">Sell</button>
+    <button id="guard" type="button" aria-pressed="false">Risk Guard: OFF</button>
+  </div>
+</div>
+
+<div class="overlay" id="ov-start">
+  <div class="card">
+    <h1>Pass the Prop Eval</h1>
+    <p>Grow a <b>$50,000</b> sim account by <b>$3,000</b> in <b>10 days</b>. Break one rule and the run ends.</p>
+    <ul>
+      <li><b>Daily loss limit:</b> never be down $1,000 on the day.</li>
+      <li><b>Trailing drawdown:</b> stay within $2,000 of your best balance. Red flood in the city shows how close you are.</li>
+      <li><b>News lockout:</b> no new trades while the yellow banner is up.</li>
+      <li><b>Risk Guard:</b> flattens you before a rule breaks. 3 saves per run. It also blocks lockout trades.</li>
+    </ul>
+    <p>Buy goes long, Sell goes short, Flat closes. Profit only counts once you are flat. Keys: B, S, F, G.</p>
+    <button class="primary" id="start" type="button">Start day 1</button>
+    <p class="fine">A game by Ticker City. Prices are random. Nothing here is trading advice and no real money is involved.</p>
+  </div>
+</div>
+
+<div class="overlay" id="ov-day" hidden>
+  <div class="card">
+    <h1 id="d-title">Day 1 closed</h1>
+    <p class="big" id="d-pl">+$0</p>
+    <p id="d-note"></p>
+    <button class="primary" id="next" type="button">Start next day</button>
+  </div>
+</div>
+
+<div class="overlay" id="ov-end" hidden>
+  <div class="card">
+    <h1 id="e-title">Run over</h1>
+    <p class="big" id="e-score"></p>
+    <p id="e-why"></p>
+    <p id="e-stats"></p>
+    <div class="row">
+      <button class="primary" id="again" type="button">Play again</button>
+      <button id="copy" type="button">Copy result</button>
+    </div>
+    <p>Risk Guard is real: the same rule protection ships in the Ticker City kits. <a href="../">ticker-city.github.io</a></p>
+    <p class="fine">Simulation and education only. Not affiliated with any prop firm or trading platform.</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  var START = 50000, TARGET = 3000, DAILY = 1000, TRAIL = 2000, DAYS = 10, PV = 50;
+  var DAY_TICKS = 400, TICK_MS = 100, LOCK_TICKS = 60, WARN_TICKS = 40;
+  var $ = function (id) { return document.getElementById(id); };
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var S = null, timer = null, toastTimer = null;
+
+  function money(n, sign) {
+    var s = Math.abs(Math.round(n)).toLocaleString("en-US");
+    return (n < 0 ? "-" : (sign ? "+" : "")) + "$" + s;
+  }
+  function gauss() { return (Math.random() + Math.random() + Math.random() + Math.random() - 2) * 1.22; }
+
+  function newRun() {
+    S = { day: 0, bal: START, peak: START, floor: START - TRAIL, guard: false, charges: 3, saves: 0, trades: 0, over: false, running: false };
+  }
+  function newDay() {
+    S.day += 1; S.t = 0; S.dayStart = S.bal; S.pos = 0; S.entry = 0;
+    S.price = 5000 + Math.round(Math.random() * 200); S.path = [S.price];
+    S.drift = 0; S.lockStart = 100 + Math.floor(Math.random() * 180); S.lockEnd = S.lockStart + LOCK_TICKS;
+    S.running = true; hide("ov-start"); hide("ov-day"); hide("ov-end");
+    clearInterval(timer); timer = setInterval(tick, TICK_MS); draw();
+  }
+  function equity() { return S.bal + S.pos * (S.price - S.entry) * PV; }
+  function inLock() { return S.t >= S.lockStart && S.t < S.lockEnd; }
+
+  function flatten() {
+    if (S.pos === 0) return;
+    S.bal = equity(); S.pos = 0; S.entry = 0;
+    if (S.bal - START >= TARGET) end(true, "Target hit");
+  }
+  function order(dir) {
+    if (!S || !S.running) return;
+    if (dir === 0) { flatten(); draw(); return; }
+    if (S.pos === dir) return;
+    if (inLock()) {
+      if (S.guard) { toast("Risk Guard blocked a lockout trade."); return; }
+      flatten(); if (S.over) return;
+      end(false, "Traded during news lockout"); return;
+    }
+    flatten(); if (S.over) return;
+    S.pos = dir; S.entry = S.price; S.trades += 1; draw();
+  }
+
+  function tick() {
+    if (!S.running || document.hidden) return;
+    S.t += 1;
+    if (S.t % 50 === 1) S.drift = (Math.random() - 0.5) * 0.5;
+    var vol = inLock() ? 2.4 : 0.9;
+    S.price = Math.round((S.price + S.drift + gauss() * vol) * 4) / 4;
+    S.path.push(S.price);
+    var eq = equity();
+    if (eq > S.peak) { S.peak = eq; S.floor = Math.min(START, S.peak - TRAIL); }
+    var dayPL = eq - S.dayStart, room = eq - S.floor;
+    if (S.guard && S.pos !== 0 && S.charges > 0 && (dayPL <= -DAILY * 0.8 || room <= 250)) {
+      S.charges -= 1; S.saves += 1; flatten();
+      toast("Risk Guard flattened you. " + S.charges + " saves left.");
+      if (S.over) return; eq = S.bal; dayPL = eq - S.dayStart; room = eq - S.floor;
+    }
+    if (dayPL <= -DAILY) { flatten(); return end(false, "Daily loss limit broken"); }
+    if (room <= 0) { flatten(); return end(false, "Trailing drawdown broken"); }
+    if (S.t >= DAY_TICKS) return closeDay();
+    draw();
+  }
+
+  function closeDay() {
+    flatten(); if (S.over) return;
+    S.running = false; clearInterval(timer);
+    var pl = S.bal - S.dayStart;
+    if (S.day >= DAYS) return end(false, "Ran out of days");
+    $("d-title").textContent = "Day " + S.day + " closed";
+    $("d-pl").textContent = money(pl, true); $("d-pl").className = "big " + (pl >= 0 ? "up" : "down");
+    $("d-note").textContent = money(Math.max(0, TARGET - (S.bal - START))) + " to go. " + (DAYS - S.day) + " days left. Drawdown room " + money(S.bal - S.floor) + ".";
+    $("next").textContent = "Start day " + (S.day + 1);
+    show("ov-day"); draw(); $("next").focus();
+  }
+
+  function end(won, why) {
+    S.over = true; S.running = false; clearInterval(timer);
+    var net = S.bal - START;
+    $("e-title").textContent = won ? "Eval passed" : "Eval failed";
+    $("ov-end").className = "overlay " + (won ? "win" : "lose");
+    $("e-score").textContent = money(net, true) + " in " + S.day + (S.day === 1 ? " day" : " days");
+    $("e-score").className = "big " + (won ? "up" : "down");
+    $("e-why").textContent = (won ? "You hit the target with every rule intact." : "What ended it: " + why + ".") +
+      (!won && !S.guard && why !== "Ran out of days" ? " Risk Guard was off." : "");
+    $("e-stats").textContent = S.trades + " trades · Risk Guard saves used: " + S.saves + " of 3";
+    S.result = "Pass the Prop Eval: " + (won ? "PASSED" : "FAILED (" + why + ")") + " " + money(net, true) + " in " + S.day + " days, " + S.trades + " trades. Simulation game by Ticker City.";
+    $("copy").textContent = "Copy result";
+    show("ov-end"); draw(); $("again").focus();
+  }
+
+  function show(id) { $(id).hidden = false; }
+  function hide(id) { $(id).hidden = true; }
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 2600);
+  }
+
+  /* ---------- HUD and chart ---------- */
+  var chart = $("chart"), cx = chart.getContext("2d");
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  var C = { up: css("--up"), down: css("--down"), warn: css("--warn"), muted: css("--muted"), line: css("--line"), ink: css("--ink"), accent: css("--accent") };
+
+  function draw() {
+    if (!S) return;
+    var eq = equity(), net = eq - START, dayPL = eq - S.dayStart, room = eq - S.floor;
+    var dRoom = Math.max(0, DAILY + dayPL);
+    $("h-day").textContent = Math.max(1, S.day) + "/" + DAYS;
+    $("m-time").style.width = (100 - 100 * (S.t || 0) / DAY_TICKS) + "%";
+    $("h-target").textContent = money(Math.max(0, TARGET - net));
+    $("m-target").style.width = Math.max(0, Math.min(100, 100 * net / TARGET)) + "%";
+    $("h-daily").textContent = money(Math.min(DAILY, dRoom));
+    setMeter("m-daily", Math.min(1, dRoom / DAILY));
+    $("h-floor").textContent = money(Math.max(0, room));
+    setMeter("m-floor", Math.min(1, room / TRAIL));
+    var p = $("pos"), open = S.pos * (S.price - S.entry) * PV;
+    p.textContent = S.pos === 0 ? "FLAT" : (S.pos > 0 ? "LONG " : "SHORT ") + money(open, true);
+    p.style.color = S.pos === 0 ? C.muted : (open >= 0 ? C.up : C.down);
+    var b = $("banner"), toLock = S.lockStart - S.t;
+    if (S.running && inLock()) { b.hidden = false; b.textContent = "NEWS LOCKOUT · no new trades · " + Math.ceil((S.lockEnd - S.t) / 10) + "s"; }
+    else if (S.running && toLock > 0 && toLock <= WARN_TICKS) { b.hidden = false; b.textContent = "News in " + Math.ceil(toLock / 10) + "s. Get flat or stay put."; }
+    else b.hidden = true;
+    $("guard").textContent = "Risk Guard: " + (S.guard ? "ON" : "OFF") + " · " + S.charges + " saves left";
+    $("guard").setAttribute("aria-pressed", S.guard ? "true" : "false");
+    drawChart(); danger = 1 - Math.max(0, Math.min(1, room / TRAIL)); mood = S.pos === 0 ? 0 : (open >= 0 ? 1 : -1);
+  }
+  function setMeter(id, f) {
+    var el = $(id); el.style.width = Math.max(0, f * 100) + "%";
+    el.style.background = f > 0.5 ? C.up : (f > 0.25 ? C.warn : C.down);
+  }
+  function drawChart() {
+    var dpr = Math.min(2, window.devicePixelRatio || 1), w = chart.clientWidth, h = chart.clientHeight;
+    if (chart.width !== Math.round(w * dpr)) { chart.width = Math.round(w * dpr); chart.height = Math.round(h * dpr); }
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0); cx.clearRect(0, 0, w, h);
+    var path = S.path || [S.price || 0]; if (!path.length) return;
+    var lo = Math.min.apply(null, path), hi = Math.max.apply(null, path);
+    if (S.pos !== 0) { lo = Math.min(lo, S.entry); hi = Math.max(hi, S.entry); }
+    var pad = Math.max(4, (hi - lo) * 0.15); lo -= pad; hi += pad;
+    var X = function (i) { return 6 + (w - 12) * i / DAY_TICKS; }, Y = function (v) { return h - 6 - (h - 12) * (v - lo) / (hi - lo); };
+    cx.fillStyle = "rgba(255,179,71,.16)"; cx.fillRect(X(S.lockStart), 0, X(S.lockEnd) - X(S.lockStart), h);
+    if (S.pos !== 0) { cx.strokeStyle = C.muted; cx.setLineDash([4, 4]); cx.beginPath(); cx.moveTo(0, Y(S.entry)); cx.lineTo(w, Y(S.entry)); cx.stroke(); cx.setLineDash([]); }
+    cx.lineWidth = 2; cx.strokeStyle = S.pos === 0 ? C.accent : (S.pos * (S.price - S.entry) >= 0 ? C.up : C.down);
+    cx.beginPath(); for (var i = 0; i < path.length; i++) { if (i) cx.lineTo(X(i), Y(path[i])); else cx.moveTo(X(i), Y(path[i])); } cx.stroke();
+    cx.fillStyle = C.ink; cx.beginPath(); cx.arc(X(path.length - 1), Y(path[path.length - 1]), 3.5, 0, 6.3); cx.fill();
+    cx.font = "600 11px " + css("--mono"); cx.fillStyle = C.muted; cx.textAlign = "right"; cx.fillText(path[path.length - 1].toFixed(2), w - 8, 14);
+  }
+
+  /* ---------- 3D city: buildings are desks, red flood is drawdown danger ---------- */
+  var danger = 0, mood = 0;
+  (function city() {
+    if (!window.THREE) return;
+    var canvas = $("city"), stage = $("stage"), T = window.THREE;
+    var renderer;
+    try { renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true }); } catch (e) { return; }
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.setClearColor(0x000000, 0);
+    var scene = new T.Scene(); scene.fog = new T.Fog(0x22132a, 24, 58);
+    var cam = new T.PerspectiveCamera(42, 1, 0.1, 100);
+    var hemi = new T.HemisphereLight(0xa487d8, 0x0a0610, 0.85); scene.add(hemi);
+    var sun = new T.DirectionalLight(0xff9a55, 1.2); sun.position.set(-10, 5, -7); scene.add(sun);
+    var ground = new T.Mesh(new T.PlaneGeometry(60, 60), new T.MeshLambertMaterial({ color: 0x0c0811 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    /* lit windows: one small texture, tinted by the mood colour through the emissive channel */
+    var wc = document.createElement("canvas"); wc.width = 64; wc.height = 128;
+    var wg = wc.getContext("2d"); wg.fillStyle = "#000"; wg.fillRect(0, 0, 64, 128);
+    for (var wr = 0; wr < 16; wr++) for (var wk = 0; wk < 8; wk++) {
+      var lit = Math.random() < 0.42; wg.globalAlpha = lit ? 0.5 + Math.random() * 0.5 : 1;
+      wg.fillStyle = lit ? "#fff" : "#0d0a12"; wg.fillRect(wk * 8 + 2, wr * 8 + 2, 5, 4);
+    }
+    var wtex = new T.CanvasTexture(wc); wtex.wrapS = wtex.wrapT = T.RepeatWrapping;
+    var roofMat = new T.MeshLambertMaterial({ color: 0x241b30 });
+    var towers = [], N = 7;
+    for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
+      if ((i === 3 || j === 3) && Math.random() < 0.85) continue;
+      var hgt = 1 + Math.pow(Math.random(), 1.8) * 6.5;
+      var mat = new T.MeshLambertMaterial({ color: 0x30263c, emissive: 0xffb060, emissiveMap: wtex, emissiveIntensity: 0.8 + Math.random() * 0.5 });
+      var geo = new T.BoxGeometry(1.25, hgt, 1.25), uv = geo.attributes.uv;
+      for (var u = 0; u < uv.count; u++) uv.setXY(u, uv.getX(u) + (i * 0.37 + j * 0.61), uv.getY(u) * Math.max(1, Math.round(hgt)) / 2.5);
+      var m = new T.Mesh(geo, [mat, mat, roofMat, roofMat, mat, mat]);
+      m.position.set((i - (N - 1) / 2) * 2, hgt / 2, (j - (N - 1) / 2) * 2); scene.add(m); towers.push(m);
+    }
+    var flood = new T.Mesh(new T.PlaneGeometry(60, 60), new T.MeshBasicMaterial({ color: 0xff4b3e, transparent: true, opacity: 0.34, depthWrite: false }));
+    flood.rotation.x = -Math.PI / 2; flood.position.y = -0.2; scene.add(flood);
+    var colFlat = new T.Color(0xffb060), colUp = new T.Color(0x3ddc97), colDown = new T.Color(0xff5a4a), cur = new T.Color(0xffb060);
+    function size() {
+      var w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return;
+      renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
+    }
+    size(); window.addEventListener("resize", size);
+    if (window.ResizeObserver) new ResizeObserver(size).observe(stage);
+    var a = 0.6, floodY = -0.2;
+    function frame() {
+      requestAnimationFrame(frame);
+      if (document.hidden) return;
+      if (!reduce) a += 0.0016;
+      cam.position.set(Math.cos(a) * 17, 7.5, Math.sin(a) * 17); cam.lookAt(0, 3.4, 0);
+      floodY += ((-0.2 + danger * 5.2) - floodY) * 0.06; flood.position.y = floodY;
+      cur.lerp(mood > 0 ? colUp : (mood < 0 ? colDown : colFlat), 0.08);
+      for (var k = 0; k < towers.length; k++) towers[k].material[0].emissive.copy(cur);
+      renderer.render(scene, cam);
+    }
+    frame();
+  })();
+
+  /* ---------- wiring ---------- */
+  $("buy").addEventListener("click", function () { order(1); });
+  $("sell").addEventListener("click", function () { order(-1); });
+  $("flat").addEventListener("click", function () { order(0); });
+  $("guard").addEventListener("click", function () { if (!S) return; S.guard = !S.guard; draw(); });
+  $("start").addEventListener("click", function () { newRun(); newDay(); });
+  $("next").addEventListener("click", function () { newDay(); });
+  $("again").addEventListener("click", function () { newRun(); newDay(); });
+  $("copy").addEventListener("click", function () {
+    var btn = $("copy");
+    try { navigator.clipboard.writeText(S.result).then(function () { btn.textContent = "Copied"; }, function () { btn.textContent = "Copy blocked here"; }); }
+    catch (e) { btn.textContent = "Copy blocked here"; }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.repeat || !S || !S.running) return;
+    var k = e.key.toLowerCase();
+    if (k === "b") order(1); else if (k === "s") order(-1); else if (k === "f") order(0); else if (k === "g") { S.guard = !S.guard; draw(); }
+  });
+  window.addEventListener("resize", function () { if (S) drawChart(); });
+  newRun(); S.path = [5000]; S.price = 5000; S.t = 0; S.lockStart = -1; S.lockEnd = -1; S.dayStart = START; S.pos = 0; S.entry = 0; draw();
+})();
+</script>
+</body>
+</html>
