@@ -7,13 +7,13 @@
 <title>Ticker City</title>
 <meta property="og:title" content="Ticker City">
 <meta property="og:description" content="Self-hosted tools for NinjaTrader 8 data, AI agents, and prop-style risk rules. Simulation and education only.">
-<meta property="og:image" content="https://ticker-city.github.io/assets/city-hero.jpg">
+<meta property="og:image" content="https://ticker-city.github.io/assets/exchange-night.jpg">
 <meta property="og:url" content="https://ticker-city.github.io/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Self-hosted tools for NinjaTrader 8 data, AI agents, and prop-style risk rules. Simulation and education only.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: cinematic full-bleed night city with the headline anchored low-left; below, glass panels floating over a deep navy field with soft colour auras. */
+/* Layout: headline on deep navy, then the night skyline in one large framed window; below, glass cards on navy with gold as the loud colour. Night rules live at the end of this sheet. */
 :root {
   color-scheme: dark;
   --bg: #0c0a12; --panel: #17131f; --line: #2e2838; --ink: #f7f2ea; --muted: #9a92a8;
@@ -171,6 +171,42 @@ footer nav a:hover { color: var(--ink); }
 @media (prefers-reduced-transparency: reduce) {
   .nav { background: var(--panel); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+/* ---------- night theme: navy, gold and the Exchange city colours (the approved skyline look) ---------- */
+:root {
+  color-scheme: dark;
+  --bg: #0a1020; --panel: #111a2e; --line: #24304a; --ink: #f4f7ff; --muted: #93a0bb; --soft: #c9d3e6;
+  --up: #36d39a; --down: #ff6b5e; --warn: #ffc34d; --accent: #5aa2ff; --sun: #ffc34d; --deep: #060b16;
+  --glass: rgba(255,255,255,.05); --hair: rgba(255,255,255,.11);
+}
+.nav { background: rgba(10,16,32,.72); }
+.hero { background: radial-gradient(60% 50% at 82% 0%, rgba(255,195,77,.11), transparent 70%), radial-gradient(50% 40% at 8% 8%, rgba(90,162,255,.11), transparent 70%), var(--bg); min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; overflow: visible; }
+.hero::after { content: none; }
+.hero-copy { order: 1; padding-block: clamp(120px, 17vh, 170px) clamp(36px, 5vw, 56px); }
+.hero h1 .g { background: linear-gradient(100deg, #ffe7b0 0%, #ffc34d 50%, #ff9d3c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .lede { color: var(--soft); text-shadow: none; max-width: 44ch; }
+.plate { order: 2; position: relative; inset: auto; align-self: center; width: min(1320px, calc(100% - 2 * max(16px, env(safe-area-inset-left, 0px)))); aspect-ratio: 16 / 9; max-width: 100%; border-radius: clamp(18px, 2.4vw, 32px); overflow: hidden; transform: none; border: 1px solid var(--hair); box-shadow: 0 60px 120px -50px rgba(0,0,0,.95), 0 0 140px -40px rgba(255,195,77,.4); }
+.plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; transform: scale(calc(1.06 - var(--p, 0) * .06)); animation: drift 30s ease-in-out infinite alternate; }
+@keyframes drift { from { translate: -1.2% 0.6%; scale: 1.03; } to { translate: 1.2% -0.6%; scale: 1.09; } }
+.tape { margin-top: clamp(40px, 6vw, 72px); }
+#products.aura::before { background: radial-gradient(50% 50% at 86% 30%, rgba(90,162,255,.13), transparent 70%); }
+#game.aura::before { background: radial-gradient(46% 50% at 12% 50%, rgba(54,211,154,.09), transparent 70%); }
+.problem h2 em { color: var(--sun); }
+.card.free { --spot: rgba(90,162,255,.16); }
+.card.city { align-items: center; }
+.shot { border-radius: 20px; overflow: hidden; border: 1px solid var(--hair); aspect-ratio: 16 / 9; max-width: 100%; box-shadow: 0 30px 60px -36px rgba(0,0,0,.9), 0 0 80px -40px rgba(255,195,77,.45); }
+.shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 860px) {
+  .hero { min-height: 0; }
+  .hero-copy { padding-block: 104px 32px; }
+}
+.shot.tall { aspect-ratio: 4 / 3; }
+.band { position: relative; margin: 18px 0 0; border-radius: clamp(18px, 2.4vw, 28px); overflow: hidden; border: 1px solid var(--hair); box-shadow: 0 30px 60px -36px rgba(0,0,0,.9); }
+.band img { display: block; width: 100%; height: auto; }
+.band figcaption { position: absolute; left: 14px; bottom: 12px; max-width: calc(100% - 28px); font-family: var(--mono); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; background: rgba(6,11,22,.74); border: 1px solid var(--hair); color: var(--soft); }
+@media (max-width: 860px) { .band figcaption { position: static; max-width: none; border: 0; border-radius: 0; background: var(--panel); padding: 10px 14px; } }
+@media (prefers-reduced-motion: reduce) { .plate img { transform: none; animation: none; } }
+@media (prefers-reduced-transparency: reduce) { .nav { background: var(--panel); } }
 </style>
 </head>
 <body>
@@ -187,10 +223,7 @@ footer nav a:hover { color: var(--ink); }
 </nav>
 
 <header class="hero" id="hero">
-  <div class="plate" aria-hidden="true">
-    <img src="assets/city-hero.jpg" alt="">
-    <video id="plateVid" muted playsinline preload="metadata" poster="assets/city-hero.jpg"><source src="assets/city-hero.mp4" type="video/mp4"></video>
-  </div>
+  <div class="plate"><img src="assets/exchange-night.jpg" alt="Night skyline: coloured glass towers around a gold-lit exchange building on the water"></div>
   <div class="wrap hero-copy">
     <p class="eyebrow">Simulation and education only</p>
     <h1><span>Build a city.</span><span class="g">Guard the rules.</span></h1>
@@ -256,7 +289,7 @@ footer nav a:hover { color: var(--ink); }
         <p>Self-hosted data bridge for NinjaTrader 8, with prop-style rules kept in view.</p>
         <ul class="tags"><li>Bar feed</li><li>Event schema</li><li>Python receiver</li><li>Daily loss limit</li><li>Drawdown-floor distance</li><li>Kill switch</li></ul>
         <div class="buy">
-          <!-- POLAR CHECKOUT: replace href="#" with the Polar checkout link for ninjatrader-bridge-kit ($99) -->
+          <!-- CHECKOUT: replace href="#" with the checkout link for ninjatrader-bridge-kit ($99) -->
           <a class="btn btn-go" href="#" data-product="ninjatrader-bridge-kit" data-price="99">Buy the kit</a>
           <span class="note" role="status"></span>
         </div>
@@ -269,16 +302,21 @@ footer nav a:hover { color: var(--ink); }
           <p>A visual city where AI agents are workers.</p>
         </div>
         <div class="col">
-          <div class="live" id="live"><canvas id="city" aria-hidden="true"></canvas><span class="livetag">Live 3D preview</span></div>
+          <div class="shot tall"><img src="assets/app-desk.jpg" alt="Screen from the dashboard: an AI agent, a white robot, at its desk facing a price panel and a one-minute chart" loading="lazy"></div>
           <ul class="tags"><li>Vault</li><li>Accounts</li><li>Approvals desk</li><li>Health audit</li><li class="inc">+ Bridge Kit and Risk Guard</li></ul>
           <div class="buy">
-            <!-- POLAR CHECKOUT: replace href="#" with the Polar checkout link for trading-city-dashboard ($249) -->
+            <!-- CHECKOUT: replace href="#" with the checkout link for trading-city-dashboard ($249) -->
             <a class="btn btn-go" href="#" data-product="trading-city-dashboard" data-price="249">Buy the dashboard</a>
             <span class="note" role="status"></span>
           </div>
         </div>
       </article>
     </div>
+
+    <figure class="band rv">
+      <img src="assets/app-city-night.jpg" alt="Screen from the dashboard: the 3D city at night, glass towers with coloured light strips around a domed exchange building, a bridge behind" loading="lazy">
+      <figcaption>Real screen from the dashboard &middot; simulation only</figcaption>
+    </figure>
 
     <p class="fine after">Ticker City is simulation and education only. Nothing here is financial advice, and no results are promised or implied. Not affiliated with NinjaTrader.</p>
   </div>
@@ -338,7 +376,6 @@ footer nav a:hover { color: var(--ink); }
   </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function () {
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -367,7 +404,7 @@ footer nav a:hover { color: var(--ink); }
     });
   }
 
-  /* buy buttons are placeholders until Polar checkout is live */
+  /* buy buttons are placeholders until checkout is live */
   document.querySelectorAll('a[data-product][href="#"]').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
@@ -388,7 +425,7 @@ footer nav a:hover { color: var(--ink); }
   } else if (vid) { vid.style.display = 'none'; }
   if (!reduce) window.addEventListener('scroll', function () { top.style.setProperty('--p', Math.min(1, window.scrollY / Math.max(1, top.clientHeight)).toFixed(3)); }, { passive: true });
   var hero = document.getElementById('live'), cv = document.getElementById('city');
-  if (!window.THREE) { hero.classList.add('nogl'); return; }
+  if (!hero || !cv || !window.THREE) return;   /* live 3D preview is off in the light design */
   var renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'low-power' }); }
   catch (err) { hero.classList.add('nogl'); return; }
